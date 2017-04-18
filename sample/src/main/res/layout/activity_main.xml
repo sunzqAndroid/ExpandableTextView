@@ -19,14 +19,14 @@
 
             <TextView
                 android:id="@+id/tv_hint"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/comparison"
                 android:textSize="14dp" />
 
             <TextView
                 android:id="@+id/tv_comparison"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/tv_hint"
                 android:background="#22999999"
@@ -36,7 +36,7 @@
 
             <cn.carbs.android.expandabletextview.library.ExpandableTextView
                 android:id="@+id/etv"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_centerVertical="true"
                 android:layout_marginBottom="32dp"
@@ -46,7 +46,7 @@
                 android:textSize="12dp" />
 
             <TextView
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_above="@id/etv"
                 android:text="@string/effect"
