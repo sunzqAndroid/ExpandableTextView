@@ -252,40 +252,21 @@ public class ExpandableTextView extends TextView{
                 }
                 int indexEnd = getValidLayout().getLineEnd(mMaxLinesOnShrink - 1);
                 int indexStart = getValidLayout().getLineStart(mMaxLinesOnShrink - 1);
-                int indexEndTrimmed = indexEnd
-                        - getLengthOfString(mEllipsisHint)
-                        - (mShowToExpandHint ? getLengthOfString(mToExpandHint) + getLengthOfString(mGapToExpandHint) : 0);
-
-                if (indexEndTrimmed <= indexStart) {
-                    indexEndTrimmed = indexEnd;
-                }
 
                 int remainWidth = getValidLayout().getWidth() -
-                        (int) (mTextPaint.measureText(mOrigText.subSequence(indexStart, indexEndTrimmed).toString()) + 0.5);
+                        (int) (mTextPaint.measureText(mOrigText.subSequence(indexStart, indexEnd).toString()) + 0.5);
                 float widthTailReplaced = mTextPaint.measureText(getContentOfString(mEllipsisHint)
                         + (mShowToExpandHint ? (getContentOfString(mToExpandHint) + getContentOfString(mGapToExpandHint)) : ""));
 
-                int indexEndTrimmedRevised = indexEndTrimmed;
-                if (remainWidth > widthTailReplaced) {
-                    int extraOffset = 0;
-                    int extraWidth = 0;
-                    while (remainWidth > widthTailReplaced + extraWidth) {
-                        extraOffset++;
-                        if (indexEndTrimmed + extraOffset <= mOrigText.length()) {
-                            extraWidth = (int) (mTextPaint.measureText(
-                                    mOrigText.subSequence(indexEndTrimmed, indexEndTrimmed + extraOffset).toString()) + 0.5);
-                        } else {
-                            break;
-                        }
-                    }
-                    indexEndTrimmedRevised += extraOffset - 1;
-                } else {
+                int indexEndTrimmedRevised = indexEnd;
+                if (remainWidth < widthTailReplaced) {
+
                     int extraOffset = 0;
                     int extraWidth = 0;
                     while (remainWidth + extraWidth < widthTailReplaced) {
                         extraOffset--;
-                        if (indexEndTrimmed + extraOffset > indexStart) {
-                            extraWidth = (int) (mTextPaint.measureText(mOrigText.subSequence(indexEndTrimmed + extraOffset, indexEndTrimmed).toString()) + 0.5);
+                        if (indexEndTrimmedRevised + extraOffset > indexStart) {
+                            extraWidth = (int) (mTextPaint.measureText(mOrigText.subSequence(indexEndTrimmedRevised + extraOffset, indexEndTrimmedRevised).toString()) + 0.5);
                         } else {
                             break;
                         }
