@@ -11,14 +11,11 @@ import android.text.SpannableStringBuilder;
 import android.text.StaticLayout;
 import android.text.TextPaint;
 import android.text.TextUtils;
-import android.text.style.ForegroundColorSpan;
 import android.util.AttributeSet;
 import android.view.ViewTreeObserver;
 import android.widget.TextView;
 
-/**
- * 2端对齐、超过指定行数显示“...全文”
- */
+
 public class JustifyTextView extends TextView {
 
     private int mLineY;
@@ -40,6 +37,10 @@ public class JustifyTextView extends TextView {
     }
 
     private void init() {
+        mMaxLinesOnShrink = getMaxLines();
+        if (mMaxLinesOnShrink == 0) {
+            mMaxLinesOnShrink = Integer.MAX_VALUE;
+        }
         getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
@@ -85,7 +86,11 @@ public class JustifyTextView extends TextView {
         int textHeight = (int) (Math.ceil(fm.descent - fm.ascent));
         textHeight = (int) (textHeight * layout.getSpacingMultiplier() + layout.getSpacingAdd()) - 2;
 
-        for (int i = 0; i < layout.getLineCount(); i++) {
+        int totalLine = layout.getLineCount();
+        if (mMaxLinesOnShrink < layout.getLineCount()) {
+            totalLine = mMaxLinesOnShrink;
+        }
+        for (int i = 0; i < totalLine; i++) {
             // 返回文本中的指定行开头的偏移
             int lineStart = layout.getLineStart(i);
             // 返回文本中的指定行最后一个字符的偏移
@@ -97,21 +102,30 @@ public class JustifyTextView extends TextView {
                 break;
             }
 
-            if (i < layout.getLineCount() - 1) {
+            if (i < totalLine - 1) {
                 if (needScale(line)) {
                     drawScaledText(canvas, lineStart, line, width);
                 } else {
                     canvas.drawText(line, 0, mLineY, paint);
                 }
             } else {
-                canvas.drawText(line, 0, mLineY, paint);
                 if (line.endsWith(mToExpandHint)) {
-                    if (expandPaint == null) {
-                        expandPaint = new TextPaint(paint);
-                        expandPaint.setColor(Color.BLUE);
-                    }
+                    canvas.drawText(line.substring(0, line.length() - mToExpandHint.length()), 0, mLineY, paint);
+                    paint.setColor(Color.BLUE);
                     float xAxisLeft = layout.getPrimaryHorizontal(getText().length() - mToExpandHint.length());
-                    canvas.drawText(mToExpandHint, xAxisLeft, mLineY, expandPaint);
+                    canvas.drawText(mToExpandHint, xAxisLeft, mLineY, paint);
+                } else if (mMaxLinesOnShrink < layout.getLineCount()) {//针对裁减文字后仍然超过5行的情况做兼容
+                    int lastLineStart = layout.getLineStart(layout.getLineCount() - 1);
+                    int lastLineEnd = layout.getLineEnd(layout.getLineCount() - 1);
+                    int lastLenght = lastLineEnd - lastLineStart;
+                    canvas.drawText(line.substring(0, line.length() - mEllipsisHint.length() - mToExpandHint.length()), 0, mLineY, paint);
+                    float xAxisLeft = layout.getPrimaryHorizontal(getText().length() - mEllipsisHint.length() - mToExpandHint.length() - lastLenght);
+                    canvas.drawText(mEllipsisHint, xAxisLeft, mLineY, paint);
+                    paint.setColor(Color.BLUE);
+                    xAxisLeft = layout.getPrimaryHorizontal(getText().length() - mEllipsisHint.length() - lastLenght - 1);
+                    canvas.drawText(mToExpandHint, xAxisLeft, mLineY, paint);
+                } else {
+                    canvas.drawText(line, 0, mLineY, paint);
                 }
             }
 
@@ -119,9 +133,6 @@ public class JustifyTextView extends TextView {
             mLineY += textHeight;
         }
     }
-
-    //末尾“全文”字样的颜色
-    private TextPaint expandPaint;
 
     private void drawScaledText(Canvas canvas, int lineStart, String line,
                                 float lineWidth) {
@@ -180,8 +191,6 @@ public class JustifyTextView extends TextView {
     private String mToExpandHint = "全文";
     private String mGapToExpandHint = "";
     private boolean mShowToExpandHint = true;
-
-    ForegroundColorSpan mForeSpan = new ForegroundColorSpan(Color.BLUE);
 
     /**
      * refresh and get a will-be-displayed text by current configuration
